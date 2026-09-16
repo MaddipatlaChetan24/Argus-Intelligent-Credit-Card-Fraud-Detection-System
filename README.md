@@ -2,150 +2,243 @@
 
 # Argus
 
-Intelligent Credit Card Fraud Detection System
+**Intelligent Credit Card Fraud Detection System**
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
-![Keras](https://img.shields.io/badge/Keras-D00000?style=for-the-badge&logo=keras&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
-![pandas](https://img.shields.io/badge/pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
-![pytest](https://img.shields.io/badge/pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)
-![License](https://img.shields.io/badge/MIT-License-blue?style=for-the-badge)
+Detect fraudulent credit card transactions using a class-weighted neural network, optimized decision thresholds, and an interactive Streamlit dashboard.
+
+
+
+
+
+
+
+\
 
 </div>
 
-# Overview
+---
 
-Argus is an artificial neural network that flags fraudulent credit card
-transactions in real time. It's built around the actual difficulty of fraud
-detection — fraud makes up roughly **0.17%** of all transactions in the
-dataset, so a model that always predicts "legitimate" would score 99.8%+
-"accuracy" while catching zero fraud. Argus is trained and evaluated
-around metrics that survive that imbalance instead.
+## Overview
+
+**Argus** is an intelligent credit card fraud detection system designed to identify potentially fraudulent transactions from highly imbalanced transaction data.
+
+Fraud detection presents a major class-imbalance challenge. In the dataset used by Argus, fraudulent transactions represent only about **0.17%** of all transactions. A model that predicts every transaction as legitimate could therefore achieve extremely high accuracy while completely failing to detect fraud.
+
+Argus addresses this problem by focusing on metrics that are more informative for rare-event detection and by optimizing the classification threshold using validation-set F1 score.
 
 The system:
 
-- Trains a class-weighted neural network on anonymized transaction data
-- Tunes its decision threshold against validation-set F1 instead of
-  defaulting to 0.5
-- Evaluates on precision, recall, F1, ROC-AUC, and PR-AUC — not accuracy
-- Serves predictions through an interactive Streamlit dashboard
-- Scores single transactions or full CSV batches
+* Trains a class-weighted artificial neural network
+* Uses stratified train, validation, and test splits
+* Applies `StandardScaler` using only training data
+* Optimizes the fraud decision threshold using validation F1
+* Evaluates precision, recall, F1-score, ROC-AUC, and PR-AUC
+* Supports single-transaction prediction
+* Supports batch CSV transaction scoring
+* Provides an interactive Streamlit dashboard
 
 ---
 
-# Features
+## Features
+
+| Feature                      | Description                                                 |
+| ---------------------------- | ----------------------------------------------------------- |
+| **Fraud Detection**          | Neural network for binary fraud classification              |
+| **Class Imbalance Handling** | Uses balanced class weights without resampling              |
+| **Threshold Optimization**   | Searches for the threshold producing the best validation F1 |
+| **Fraud Probability**        | Returns a probability score for each transaction            |
+| **Single Prediction**        | Score individual transactions through the dashboard         |
+| **Batch Prediction**         | Upload a CSV and score multiple transactions                |
+| **Model Evaluation**         | Precision, recall, F1, ROC-AUC, and PR-AUC                  |
+| **Interactive Dashboard**    | Streamlit interface for model predictions and metrics       |
+| **Automated Testing**        | Pytest tests for data and prediction components             |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Credit Card Transactions"] --> B["Data Loading"]
+    B --> C["Stratified Train / Validation / Test Split"]
+    C --> D["StandardScaler"]
+    D --> E["Class-Weighted ANN"]
+    E --> F["Threshold Optimization"]
+    F --> G["Test Set Evaluation"]
+    G --> H["Model + Scaler"]
+    H --> I["Streamlit Dashboard"]
+    I --> J["Single Transaction"]
+    I --> K["Batch CSV"]
+```
+
+---
 
 ## Modeling Pipeline
 
-| Stage | Responsibility |
-|-------|-----------------|
-| Data | Stratified train/validation/test split, `StandardScaler` fit on train only |
-| Model | Dense ANN trained with balanced class weights (no resampling) |
-| Threshold Search | Scans validation-set F1 across candidate thresholds, picks the optimum |
-| Evaluation | Scores the untouched test set once, at the chosen threshold |
+```text
+Raw Transactions
+        │
+        ▼
+Data Preprocessing
+        │
+        ├── Stratified Train / Validation / Test Split
+        │
+        ▼
+StandardScaler
+        │
+        ▼
+Class-Weighted Neural Network
+        │
+        ▼
+Validation Threshold Search
+        │
+        ▼
+Optimal F1 Threshold
+        │
+        ▼
+Untouched Test Set
+        │
+        ▼
+Precision / Recall / F1 / ROC-AUC / PR-AUC
+```
 
----
+### Neural Network
 
-## Interactive Dashboard
+```text
+Input (30)
+    │
+    ▼
+Dense(64, ReLU)
+    │
+    ▼
+Dropout(0.3)
+    │
+    ▼
+Dense(32, ReLU)
+    │
+    ▼
+Dropout(0.3)
+    │
+    ▼
+Dense(16, ReLU)
+    │
+    ▼
+Dense(1, Sigmoid)
+```
 
-The Streamlit app provides:
-
-- Single-transaction scoring with one-click legitimate/suspicious examples
-- Live fraud probability with a threshold-relative verdict card
-- Batch CSV upload and scoring, with downloadable results
-- A sidebar showing live test-set model metrics
+The network uses class weights during training to account for the severe imbalance between legitimate and fraudulent transactions.
 
 ---
 
 ## Results
 
-Test-set performance at the F1-optimal threshold:
+Test-set performance at the F1-optimal decision threshold:
 
-| Threshold | Precision | Recall | F1-Score | ROC-AUC | PR-AUC |
-|-----------|-----------|--------|----------|---------|--------|
-| 0.99      | 0.796     | 0.779  | 0.787    | 0.959   | 0.687  |
+| Threshold | Precision |    Recall |  F1-Score |   ROC-AUC |    PR-AUC |
+| --------- | --------: | --------: | --------: | --------: | --------: |
+| **0.99**  | **0.796** | **0.779** | **0.787** | **0.959** | **0.687** |
 
-PR-AUC is the more informative metric here — under this severity of class
-imbalance, ROC-AUC can look deceptively strong even when precision at usable
-recall levels is much lower.
+Because fraud is extremely rare, **PR-AUC** provides useful information about the model's precision-recall behavior under class imbalance, alongside ROC-AUC and threshold-specific metrics.
 
 ---
 
-# Architecture
+## Interactive Dashboard
 
-```text
-Raw Transactions (CSV)
-        │
-        ▼
-Preprocessing ── stratified split, StandardScaler (train-fit only)
-        │
-        ▼
-ANN Training ── class-weighted Dense network
-        │
-        ▼
-Threshold Search ── validation-set F1 sweep
-        │
-        ▼
-Evaluation ── test-set precision / recall / F1 / ROC-AUC / PR-AUC
-        │
-        ▼
-Streamlit App ── single-transaction + batch CSV scoring
-```
+Argus includes a Streamlit dashboard for interacting with the trained model.
 
-**Network architecture:**
+### Single Transaction
 
-```text
-Input(30) → Dense(64, relu) → Dropout(0.3)
-          → Dense(32, relu) → Dropout(0.3)
-          → Dense(16, relu)
-          → Dense(1, sigmoid)
-```
+* Enter or select transaction features
+* Generate a fraud probability
+* Compare the probability against the optimized threshold
+* Display a legitimate or suspicious verdict
+
+### Batch Prediction
+
+* Upload a CSV containing transactions
+* Process multiple transactions
+* Generate fraud probabilities
+* Export prediction results
+
+### Model Metrics
+
+The dashboard also provides access to the model's evaluation metrics, including:
+
+* Precision
+* Recall
+* F1-score
+* ROC-AUC
+* PR-AUC
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```text
 Argus/
 │
 ├── app/
-│   └── app.py                   # Streamlit dashboard
+│   └── app.py
 │
-├── src/fraud_detection/
-│   ├── config.py                 # paths, feature schema, constants
-│   ├── data.py                   # load_dataset / split_data
-│   ├── model.py                  # network architecture, class weights
-│   ├── train.py                  # training entry point (CLI)
-│   ├── evaluate.py               # evaluation + threshold search (CLI)
-│   └── predict.py                # inference (single + batch)
+├── src/
+│   └── fraud_detection/
+│       ├── __init__.py
+│       ├── config.py
+│       ├── data.py
+│       ├── model.py
+│       ├── train.py
+│       ├── evaluate.py
+│       └── predict.py
 │
-├── notebooks/                    # EDA, preprocessing, training, evaluation walkthroughs
-├── tests/                        # pytest unit tests
-├── models/                       # saved model + scaler artifacts
-├── results/                      # evaluation_metrics.csv
-├── images/                       # ROC / PR curve plots
+├── notebooks/
+│   └── ...
+│
+├── tests/
+│   ├── conftest.py
+│   ├── test_data.py
+│   └── test_predict.py
+│
+├── data/
+│   └── raw/
+│       └── creditcard.csv
+│
+├── models/
+│   └── ...
+│
+├── results/
+│   └── ...
+│
+├── images/
+│   └── ...
+│
 ├── pyproject.toml
 ├── requirements.txt
-└── requirements-dev.txt
+├── requirements-dev.txt
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-# Installation
+## Quick Start
 
-## Clone Repository
+### Prerequisites
+
+* Python ≥ 3.10
+* pip
+* Git
+
+### Clone the Repository
 
 ```bash
-git clone https://github.com/<username>/Argus.git
+git clone https://github.com/MaddipatlaChetan24/Argus-Intelligent-Credit-Card-Fraud-Detection-System.git
 
-cd Argus
+cd Argus-Intelligent-Credit-Card-Fraud-Detection-System
 ```
 
-## Create Virtual Environment
+### Create a Virtual Environment
 
-**Linux / macOS**
+**macOS / Linux**
 
 ```bash
 python3 -m venv .venv
@@ -159,113 +252,136 @@ python -m venv .venv
 .venv\Scripts\activate
 ```
 
-## Install Dependencies
+### Install Dependencies
 
 ```bash
-pip install -e ".[dev]"
+pip install -r requirements.txt
 ```
 
-## Dataset
+For development and testing:
 
-Download the [Credit Card Fraud Detection dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
-(Kaggle / ULB Machine Learning Group) and place it at `data/raw/creditcard.csv`.
-This path is gitignored and not committed to the repo.
+```bash
+pip install -r requirements-dev.txt
+```
 
 ---
 
-# Running the Project
+## Dataset
 
-## Launch the dashboard
+Argus uses the **Credit Card Fraud Detection** dataset from Kaggle and the ULB Machine Learning Group.
+
+The dataset contains **284,807 transactions**, including `Time`, `Amount`, 28 anonymized PCA-transformed features (`V1`–`V28`), and the binary `Class` target.
+
+* `Class = 0` → Legitimate transaction
+* `Class = 1` → Fraudulent transaction
+
+Download the dataset and place it at:
+
+```text
+data/raw/creditcard.csv
+```
+
+The dataset is excluded from version control through `.gitignore`.
+
+---
+
+## Running the Project
+
+### Train the Model
+
+```bash
+python -m fraud_detection.train
+```
+
+This trains the neural network and saves the required model and scaler artifacts.
+
+### Evaluate the Model
+
+```bash
+python -m fraud_detection.evaluate
+```
+
+This evaluates the model on the test set and generates evaluation results.
+
+### Launch the Dashboard
 
 ```bash
 streamlit run app/app.py
 ```
 
-The application will be available at
+The application will be available at:
 
-```
+```text
 http://localhost:8501
 ```
 
-## Reproduce training
-
-```bash
-python -m fraud_detection.train      # trains the model, saves models/*.keras + scaler.pkl
-python -m fraud_detection.evaluate   # scores the test set, saves results/ + images/
-```
-
-## Run tests
+### Run Tests
 
 ```bash
 pytest
 ```
 
-Unit tests cover the stratified data-splitting logic and the prediction/batch
-prediction interface, with the model and scaler mocked so they run without a
-full TensorFlow install or the real dataset.
+The test suite covers data splitting and prediction functionality. Model and scaler components can be mocked so that the tests can run without requiring the complete training environment or dataset.
 
 ---
 
-# Technology Stack
+## Technology Stack
 
-**Modeling**
+### Machine Learning
 
-- TensorFlow / Keras
-- scikit-learn
+* **TensorFlow**
+* **Keras**
+* **scikit-learn**
 
-**Data**
+### Data Processing
 
-- pandas
-- NumPy
+* **pandas**
+* **NumPy**
 
-**App**
+### Application
 
-- Streamlit
+* **Streamlit**
 
-**Testing / Tooling**
+### Testing & Development
 
-- pytest
-- ruff
-
----
-
-# Dataset
-
-[Credit Card Fraud Detection](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
-(Kaggle / ULB Machine Learning Group) — 284,807 European cardholder
-transactions from September 2013, with `Time` and `Amount` plus 28
-PCA-transformed features (`V1`–`V28`) to protect confidentiality, and a
-binary `Class` label (1 = fraud).
+* **pytest**
+* **ruff**
 
 ---
 
-# Limitations & Roadmap
+## Limitations
 
-**Current limitations**
-
-- The 28 PCA features are anonymized, so the model can't be interpreted in
-  terms of real transaction attributes (merchant, location, etc.)
-- No temporal validation — a production system would need to account for
-  fraud patterns drifting over time, which a single random train/test split
-  doesn't capture
-
-**Roadmap**
-
-- Compare against gradient-boosted trees (XGBoost / LightGBM)
-- SHAP-based explainability for individual predictions
-- Temporal / rolling-window validation
-- Dockerized deployment
-- REST API alongside the Streamlit dashboard
+* The dataset's 28 PCA-transformed features are anonymized, limiting direct interpretation of individual transaction characteristics.
+* The current evaluation uses a random stratified split rather than temporal validation.
+* Real-world fraud patterns can change over time, requiring continuous monitoring and model updates.
+* Model performance on this dataset may not directly represent performance on live financial transaction data.
 
 ---
 
-# Contributing
+## Roadmap
+
+* [ ] Compare against XGBoost and LightGBM
+* [ ] Add SHAP-based prediction explanations
+* [ ] Implement temporal / rolling-window validation
+* [ ] Add Docker deployment
+* [ ] Build a REST API for inference
+* [ ] Add model monitoring and drift detection
+* [ ] Add configurable alert thresholds
+* [ ] Expand batch-processing capabilities
+
+---
+
+## Contributing
 
 Contributions are welcome.
 
 ```bash
 git checkout -b feature/new-feature
+
+git add .
+
 git commit -m "Add new feature"
+
 git push origin feature/new-feature
 ```
 
@@ -273,6 +389,16 @@ Then open a Pull Request.
 
 ---
 
-# License
+## License
 
-This project is distributed under the MIT License.
+This project is distributed under the **MIT License**.
+
+---
+
+<div align="center">
+
+**Argus — Intelligent Credit Card Fraud Detection System**
+
+Built with Python, TensorFlow, Keras, scikit-learn and Streamlit.
+
+</div>
