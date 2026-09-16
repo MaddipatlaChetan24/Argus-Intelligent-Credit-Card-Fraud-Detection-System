@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argus"
+version = "1.0.0"
+description = "Argus: Intelligent Credit Card Fraud Detection System — a class-weighted, threshold-tuned ANN served through a Streamlit dashboard."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "tensorflow>=2.16,<3",
+    "streamlit>=1.35,<2",
+    "pandas>=2.2,<3",
+    "numpy>=1.26,<2",
+    "scikit-learn>=1.4,<2",
+    "joblib>=1.4,<2",
+    "matplotlib>=3.8,<4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
